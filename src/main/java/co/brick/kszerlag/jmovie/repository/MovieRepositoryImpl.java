@@ -51,12 +51,11 @@ public class MovieRepositoryImpl implements MovieRepository {
             return findMovieById(movieEntity.getId().toString()).isPresent();
         }
         if (movieEntity.getName() != null) {
-            findMovieByName(movieEntity.getName()).stream()
-                    .forEach(movie -> {
-                        if (movie.equals(movieEntity)) {
-                            throw new MovieAlreadyExistsException(ErrorsMsgConst.MOVIE_ALREADY_EXISTS);
-                        }
-                    });
+            for (MovieEntity movie : findMovieByName(movieEntity.getName())) {
+                if (movie.equals(movieEntity)) {
+                    throw new MovieAlreadyExistsException(ErrorsMsgConst.MOVIE_ALREADY_EXISTS);
+                }
+            }
         }
         return true;
     }

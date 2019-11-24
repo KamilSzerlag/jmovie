@@ -9,6 +9,7 @@ public class MovieDto {
 
     private ObjectId id;
 
+    @Size(max = 150)
     @NotBlank(message = "Movie name can't be empty")
     private String name;
 
