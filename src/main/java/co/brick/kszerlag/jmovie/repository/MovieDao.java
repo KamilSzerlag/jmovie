@@ -9,8 +9,10 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Filters.regex;
 import static com.mongodb.client.model.Updates.combine;
 import static com.mongodb.client.model.Updates.set;
 
@@ -31,9 +33,9 @@ public class MovieDao {
         return movieEntity;
     }
 
-    MovieEntity findById(String id) {
+    MovieEntity findById(String movieId) {
         MongoCollection<MovieEntity> collection = mongoDatabase.getCollection("movies", MovieEntity.class);
-        return collection.find(eq("id", id)).first();
+        return collection.find(eq("_id", new ObjectId(movieId))).first();
     }
 
     List<MovieEntity> findByName(String name) {
@@ -48,17 +50,22 @@ public class MovieDao {
 
     MovieEntity update(MovieEntity movieEntity) {
         MongoCollection<MovieEntity> collection = mongoDatabase.getCollection("movies", MovieEntity.class);
-        return collection.findOneAndUpdate(eq("id", movieEntity.getId()), combine(set("name", movieEntity.getName()), set("img", movieEntity.getImage())));
+        return collection.findOneAndUpdate(eq("_id", movieEntity.getId()), combine(set("name", movieEntity.getName()), set("img", movieEntity.getImage())));
     }
 
     void delete(String movieId) {
         MongoCollection<MovieEntity> collection = mongoDatabase.getCollection("movies", MovieEntity.class);
-        collection.deleteOne(eq("id", movieId));
+        collection.deleteOne(eq("_id", new ObjectId(movieId)));
     }
 
     MovieEntity updateMovieImagePath(String movieId, String imagePath) {
         MongoCollection<MovieEntity> collection = mongoDatabase.getCollection("movies", MovieEntity.class);
-        FindOneAndUpdateOptions options = new FindOneAndUpdateOptions();
-        return collection.findOneAndUpdate(eq("id", movieId), set("image", imagePath));
+        return collection.findOneAndUpdate(eq("_id", new ObjectId(movieId)), set("image", imagePath));
+    }
+
+    public List<MovieEntity> findMovieContainsName(String name) {
+        MongoCollection<MovieEntity> collection = mongoDatabase.getCollection("movies", MovieEntity.class);
+        return collection.find(regex("name", Pattern.compile(name, Pattern.CASE_INSENSITIVE)))
+                .into(new ArrayList<>());
     }
 }

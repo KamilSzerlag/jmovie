@@ -12,13 +12,19 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.validation.ConstraintViolationException;
 import javax.validation.Valid;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.NotBlank;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/movies")
@@ -34,7 +40,7 @@ public class MovieController {
     }
 
     @PostMapping
-    public ResponseEntity create(@RequestBody @Valid MovieDto movieDto) throws Exception {
+    public ResponseEntity create(@RequestBody @Valid MovieDto movieDto) throws ConstraintViolationException, URISyntaxException {
         MovieEntity movieEntity = movieService.createMovie(MovieMapper.getINSTANCE().toMovieEntity(movieDto));
         return ResponseEntity.created(new URI("/movies/" + movieEntity.getId())).build();
     }
@@ -55,6 +61,20 @@ public class MovieController {
     public ResponseEntity<List<MovieDto>> findMovieByName(@RequestParam String name) {
         List<MovieEntity> movieEntities = movieService.findMovieByName(name);
         return ResponseEntity.ok(MovieMapper.getINSTANCE().toMovieDtoList(movieEntities));
+    }
+
+    @GetMapping(params = "filteredName")
+    public ResponseEntity<Map<String,List<MovieDto>>> searchMovieByName(@RequestParam(defaultValue = "")
+                                                                            @Max(value = 30, message = "Query is to long.")
+                                                                                    String query) throws ConstraintViolationException {
+        Map<String, List<MovieDto>> filteredMovies = new HashMap<>();
+        if (query.isBlank()) {
+            filteredMovies.put("movies", MovieMapper.getINSTANCE().toMovieDtoList(movieService.findAll()));
+            return ResponseEntity.ok(filteredMovies);
+        }
+        List<MovieEntity> movieEntities = movieService.searchMovieByName(query);
+        filteredMovies.put("movies",MovieMapper.getINSTANCE().toMovieDtoList(movieEntities));
+        return ResponseEntity.ok(filteredMovies);
     }
 
     @PutMapping("/{movieId}")

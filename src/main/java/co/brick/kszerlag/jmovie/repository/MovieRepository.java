@@ -18,4 +18,6 @@ public interface MovieRepository {
     void deleteMovie(String movieId);
 
     MovieEntity updateMovieImagePath(String movieId, String imagePath);
+
+    List<MovieEntity> searchMovieByName(String searchedQuery);
 }

@@ -20,4 +20,5 @@ public interface MovieService {
 
     void deleteMovie(String movieId);
 
+    List<MovieEntity> searchMovieByName(String query);
 }

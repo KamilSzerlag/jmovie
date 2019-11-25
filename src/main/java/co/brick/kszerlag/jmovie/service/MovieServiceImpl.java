@@ -50,4 +50,9 @@ public class MovieServiceImpl implements MovieService {
     public MovieEntity updateImagePath(String movieId, String path) {
         return movieRepository.updateMovieImagePath(movieId, path);
     }
+
+    @Override
+    public List<MovieEntity> searchMovieByName(String query) {
+        return movieRepository.searchMovieByName(query);
+    }
 }

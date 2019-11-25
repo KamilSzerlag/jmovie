@@ -1,5 +1,6 @@
 package co.brick.kszerlag.jmovie.entity;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import org.bson.types.ObjectId;
 
@@ -11,6 +12,11 @@ public class MovieEntity {
     private byte[] image;
 
     public MovieEntity() {
+    }
+
+    public MovieEntity(String name, String description) {
+        this.name = name;
+        this.description = description;
     }
 
     public MovieEntity(String name, String description, byte[] image) {
@@ -67,5 +73,14 @@ public class MovieEntity {
     @Override
     public int hashCode() {
         return Objects.hashCode(name, description);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("id", id)
+                .add("name", name)
+                .add("description", description)
+                .toString();
     }
 }

@@ -64,4 +64,9 @@ public class MovieRepositoryImpl implements MovieRepository {
     public MovieEntity updateMovieImagePath(String movieId, String imagePath) {
         return movieDao.updateMovieImagePath(movieId, imagePath);
     }
+
+    @Override
+    public List<MovieEntity> searchMovieByName(String name) {
+        return movieDao.findMovieContainsName(name);
+    }
 }
