@@ -24,18 +24,23 @@ public class MovieMapper {
         if (movieDto == null) {
             return null;
         }
-        return new MovieEntity(movieDto.getName(),
+        return new MovieEntity(
+                movieDto.getName(),
                 movieDto.getDescription(),
-                movieDto.getImage());
+                movieDto.getImage()
+        );
     }
 
     public MovieDto toMovieDto(MovieEntity movieEntity) {
         if (movieEntity == null) {
             return null;
         }
-        return new MovieDto(movieEntity.getName(),
+        return new MovieDto(
+                movieEntity.getId() != null ? movieEntity.getId().toString() : null,
+                movieEntity.getName(),
                 movieEntity.getDescription(),
-                movieEntity.getImage());
+                movieEntity.getImage()
+        );
     }
 
     public List<MovieDto> toMovieDtoList(List<MovieEntity> movieEntityList) {
@@ -43,9 +48,7 @@ public class MovieMapper {
             return null;
         }
         return movieEntityList.stream()
-                .map(movieEntity -> new MovieDto(movieEntity.getName(),
-                        movieEntity.getDescription(),
-                        movieEntity.getImage()))
+                .map(movieEntity -> toMovieDto(movieEntity))
                 .collect(Collectors.toList());
     }
 }

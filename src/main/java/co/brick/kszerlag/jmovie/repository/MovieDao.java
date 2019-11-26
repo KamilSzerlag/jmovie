@@ -4,6 +4,8 @@ import co.brick.kszerlag.jmovie.entity.MovieEntity;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
+import com.mongodb.client.result.DeleteResult;
+import com.mongodb.client.result.UpdateResult;
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Component;
 
@@ -48,17 +50,17 @@ public class MovieDao {
         return collection.find().into(new ArrayList<>());
     }
 
-    MovieEntity update(MovieEntity movieEntity) {
+    UpdateResult update(MovieEntity movieEntity) {
         MongoCollection<MovieEntity> collection = mongoDatabase.getCollection("movies", MovieEntity.class);
-        return collection.findOneAndUpdate(eq("_id", movieEntity.getId()), combine(set("name", movieEntity.getName()), set("img", movieEntity.getImage())));
+        return collection.updateOne(eq("_id", movieEntity.getId()), combine(set("name", movieEntity.getName()), set("img", movieEntity.getImage())));
     }
 
-    void delete(String movieId) {
+    DeleteResult delete(String movieId) {
         MongoCollection<MovieEntity> collection = mongoDatabase.getCollection("movies", MovieEntity.class);
-        collection.deleteOne(eq("_id", new ObjectId(movieId)));
+        return collection.deleteOne(eq("_id", new ObjectId(movieId)));
     }
 
-    MovieEntity updateMovieImagePath(String movieId, String imagePath) {
+    MovieEntity findAndUpdateMovieImagePath(String movieId, String imagePath) {
         MongoCollection<MovieEntity> collection = mongoDatabase.getCollection("movies", MovieEntity.class);
         return collection.findOneAndUpdate(eq("_id", new ObjectId(movieId)), set("image", imagePath));
     }

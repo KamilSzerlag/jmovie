@@ -1,6 +1,6 @@
 package co.brick.kszerlag.jmovie.consts;
 
-public class ErrorMsgConsts {
+public class ErrorMsgConst {
 
     public static final String INVALID_PARAMETERS = "Invalid parameters";
 
@@ -17,5 +17,4 @@ public class ErrorMsgConsts {
 
     public static final String INVALID_URI = "Created URI is incorrect";
     public static final String UNEXPECTED_ERROR = "An unexpected error has occurred";
-
 }

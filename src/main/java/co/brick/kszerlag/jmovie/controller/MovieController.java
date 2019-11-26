@@ -1,11 +1,20 @@
 package co.brick.kszerlag.jmovie.controller;
 
 import co.brick.kszerlag.jmovie.dto.MovieDto;
+import co.brick.kszerlag.jmovie.dto.ResponseError;
 import co.brick.kszerlag.jmovie.entity.MovieEntity;
+import co.brick.kszerlag.jmovie.fault.MovieAlreadyExistsException;
+import co.brick.kszerlag.jmovie.fault.NoSuchMovieException;
+import co.brick.kszerlag.jmovie.fault.UnexpectedResultException;
 import co.brick.kszerlag.jmovie.service.MovieService;
+import co.brick.kszerlag.jmovie.consts.ErrorCodeConst;
+import co.brick.kszerlag.jmovie.consts.ErrorMsgConst;
 import co.brick.kszerlag.jmovie.utils.MongoId;
 import co.brick.kszerlag.jmovie.utils.MovieMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -15,7 +24,6 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Valid;
 import javax.validation.constraints.Max;
-import javax.validation.constraints.NotBlank;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -31,6 +39,8 @@ import java.util.Map;
 @Validated
 public class MovieController {
 
+    protected static final Logger logger = LoggerFactory.getLogger(MovieController.class);
+
     @Value("${app.upload.folder}")
     private String storagePath;
     private MovieService movieService;
@@ -40,9 +50,17 @@ public class MovieController {
     }
 
     @PostMapping
-    public ResponseEntity create(@RequestBody @Valid MovieDto movieDto) throws ConstraintViolationException, URISyntaxException {
-        MovieEntity movieEntity = movieService.createMovie(MovieMapper.getINSTANCE().toMovieEntity(movieDto));
-        return ResponseEntity.created(new URI("/movies/" + movieEntity.getId())).build();
+    public ResponseEntity create(@RequestBody @Valid MovieDto movieDto) throws ConstraintViolationException {
+        return movieService.createMovie(MovieMapper.getINSTANCE().toMovieEntity(movieDto))
+                .map(movieEntity -> {
+                    try {
+                        return ResponseEntity.created(new URI("/movies/" + movieEntity.getId())).build();
+                    } catch (URISyntaxException e) {
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                .body(new ResponseError(ErrorCodeConst.INVALID_URI, ErrorMsgConst.INVALID_URI));
+                    }
+                })
+                .orElse(ResponseEntity.badRequest().build());
     }
 
     @GetMapping
@@ -78,28 +96,56 @@ public class MovieController {
     }
 
     @PutMapping("/{movieId}")
-    public ResponseEntity<MovieDto> replaceMovie(@PathVariable String movieId, @Valid MovieDto newMovieDto) {
-        MovieEntity movieEntity = movieService.updateMovie(movieId, MovieMapper.getINSTANCE().toMovieEntity(newMovieDto));
-        return ResponseEntity.ok(MovieMapper.getINSTANCE().toMovieDto(movieEntity));
+    public ResponseEntity updateMovie(@PathVariable @MongoId String movieId, @Valid MovieDto newMovieDto) {
+        return movieService.updateMovie(movieId, MovieMapper.getINSTANCE().toMovieEntity(newMovieDto))
+                .map(movieEntity -> ResponseEntity.noContent().build())
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{movieId}")
     public ResponseEntity removeMovie(@PathVariable @MongoId String movieId) {
         movieService.deleteMovie(movieId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping(value = "/{movieId}/image", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity uploadMovieImage(@PathVariable @MongoId String movieId, @RequestParam(name = "image") MultipartFile multipartFile) {
+    public ResponseEntity<MovieDto> uploadMovieImage(@PathVariable @MongoId String movieId, @RequestParam(name = "image") MultipartFile multipartFile) {
         try {
             String fileName = movieId;
-            movieService.updateImagePath(movieId, String.format("%s/%s", storagePath, fileName));
-            Files.copy(multipartFile.getInputStream(), Paths.get(storagePath), StandardCopyOption.REPLACE_EXISTING);
-            return ResponseEntity.ok().build();
+            MovieEntity movieEntity = movieService.updateImagePath(movieId, String.format("%s/%s", storagePath, fileName));
+            Files.copy(multipartFile.getInputStream(), Paths.get(storagePath + "/" + fileName), StandardCopyOption.REPLACE_EXISTING);
+            return ResponseEntity.ok(MovieMapper.getINSTANCE().toMovieDto(movieEntity));
         } catch (IOException e) {
+            logger.error(e.getMessage(), e);
             return ResponseEntity.unprocessableEntity().build();
         }
     }
 
+    @ExceptionHandler(Exception.class)
+    ResponseEntity<ResponseError> handleException(Exception e) {
+        logger.error(e.getMessage(), e);
+        return new ResponseEntity<>(new ResponseError(ErrorCodeConst.INTERNAL_ERROR, ErrorMsgConst.UNEXPECTED_ERROR), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(NoSuchMovieException.class)
+    ResponseEntity<ResponseError> handleNoSuchMovieException(NoSuchMovieException e) {
+        return new ResponseEntity<ResponseError>(new ResponseError(ErrorCodeConst.RESOURCE_NOT_FOUND, e.getMessage()), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(MovieAlreadyExistsException.class)
+    ResponseEntity<ResponseError> handleMovieAlreadyExistsException(MovieAlreadyExistsException e) {
+        return new ResponseEntity<>(new ResponseError(ErrorCodeConst.RESOURCE_ALREADY_EXISTS, e.getMessage()), HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(UnexpectedResultException.class)
+    ResponseEntity<ResponseError> handleUnexpectedResultException(UnexpectedResultException e) {
+        logger.error(e.getMessage(), e);
+        return new ResponseEntity<>(new ResponseError(ErrorCodeConst.UNEXPECTED_OPERATION_RESULT, e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    ResponseEntity<ResponseError> handleConstraintViolationException(ConstraintViolationException e) {
+        return new ResponseEntity<>(new ResponseError(ErrorCodeConst.CONSTRAINT_VIOLATION, e.getMessage()), HttpStatus.BAD_REQUEST);
+    }
 }
 

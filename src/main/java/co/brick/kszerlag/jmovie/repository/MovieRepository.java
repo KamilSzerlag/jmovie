@@ -13,11 +13,11 @@ public interface MovieRepository {
 
     List<MovieEntity> findMovieByName(String name);
 
-    MovieEntity save(MovieEntity movieEntity);
+    Optional<MovieEntity> save(MovieEntity movieEntity);
 
     void deleteMovie(String movieId);
 
-    MovieEntity updateMovieImagePath(String movieId, String imagePath);
+    Optional<MovieEntity> updateMovieImagePath(String movieId, String imagePath);
 
     List<MovieEntity> searchMovieByName(String searchedQuery);
 }

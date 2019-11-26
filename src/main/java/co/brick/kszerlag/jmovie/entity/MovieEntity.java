@@ -9,7 +9,7 @@ public class MovieEntity {
     private ObjectId id;
     private String name;
     private String description;
-    private byte[] image;
+    private String image;
 
     public MovieEntity() {
     }
@@ -19,7 +19,7 @@ public class MovieEntity {
         this.description = description;
     }
 
-    public MovieEntity(String name, String description, byte[] image) {
+    public MovieEntity(String name, String description, String image) {
         this.name = name;
         this.description = description;
         this.image = image;
@@ -49,11 +49,11 @@ public class MovieEntity {
         this.description = description;
     }
 
-    public byte[] getImage() {
+    public String getImage() {
         return image;
     }
 
-    public void setImage(byte[] image) {
+    public void setImage(String image) {
         this.image = image;
     }
 

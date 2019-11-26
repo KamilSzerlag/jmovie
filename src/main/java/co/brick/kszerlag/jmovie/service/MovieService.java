@@ -3,16 +3,17 @@ package co.brick.kszerlag.jmovie.service;
 import co.brick.kszerlag.jmovie.entity.MovieEntity;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface MovieService {
 
-    MovieEntity createMovie(MovieEntity movieEntity);
+    Optional<MovieEntity> createMovie(MovieEntity movieEntity);
 
     MovieEntity findMovieById(String movieId);
 
     List<MovieEntity> findMovieByName(String name);
 
-    MovieEntity updateMovie(String movieId, MovieEntity movieEntity);
+    Optional<MovieEntity> updateMovie(String movieId, MovieEntity movieEntity);
 
     MovieEntity updateImagePath(String movieId, String path);
 

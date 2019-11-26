@@ -75,13 +75,13 @@ class MovieRepositoryTest {
 
     @Test
     void shouldReturnAllMovieEntitiesFromCollection() {
-        MovieEntity christmasPrince = new MovieEntity("Świąteczny książę", "Zwykła dziewczyna poznaje w święta księcia.", null);
+        MovieEntity christmasPrince = new MovieEntity("Świąteczny książę", "Zwykła dziewczyna poznaje w święta księcia.");
         christmasPrince.setId(new ObjectId());
-        MovieEntity hollywood = new MovieEntity("Pewnego razu w hollywood", "Aktor i jego kaskader starają się reanimować swoją karierę", null);
+        MovieEntity hollywood = new MovieEntity("Pewnego razu w hollywood", "Aktor i jego kaskader starają się reanimować swoją karierę");
         christmasPrince.setId(new ObjectId());
-        MovieEntity ironBridge = new MovieEntity("Żelazny most", "Przyjaźń podzialona przez kobietę i 30 metrów ziemi.", null);
+        MovieEntity ironBridge = new MovieEntity("Żelazny most", "Przyjaźń podzialona przez kobietę i 30 metrów ziemi.");
         christmasPrince.setId(new ObjectId());
-        MovieEntity citizenJones = new MovieEntity("Obywatel Jones", "Anglik próboje wyjaśnic co się dzieje na ukrainie w latach 30-tych.", null);
+        MovieEntity citizenJones = new MovieEntity("Obywatel Jones", "Anglik próboje wyjaśnic co się dzieje na ukrainie w latach 30-tych.");
         christmasPrince.setId(new ObjectId());
 
         List<MovieEntity> expectedList = new ArrayList<>();
@@ -104,7 +104,7 @@ class MovieRepositoryTest {
     @Test
     void shouldReturnMovieEntityByGivenMovieId() {
         String movieId = "5ddc2fff26a6e33c4f6d6c20";
-        MovieEntity movieEntity = new MovieEntity("Joker", "Strudozny życiem komik popada w obłęd i staje się psychopatycznmy mordercą", null);
+        MovieEntity movieEntity = new MovieEntity("Joker", "Strudozny życiem komik popada w obłęd i staje się psychopatycznmy mordercą");
         movieEntity.setId(new ObjectId(movieId));
         Optional<MovieEntity> optionalMovieEntity = Optional.of(movieEntity);
 
@@ -116,46 +116,46 @@ class MovieRepositoryTest {
     @Test
     void shoulReturnListOfMovieEnitiesByGivenName() {
         final String searchedName = "Obywatel Jones";
-        MovieEntity obywatelJones = new MovieEntity(searchedName, "Anglik próboje wyjaśnic co się dzieje na ukrainie w latach 30-tych.", null);
-        MovieEntity obywatel = new MovieEntity("Obywatel", "Żywot poczciwego obywatale kraju nad wisłą.", null);
-        MovieEntity ironBridge = new MovieEntity("Żelazny most", "Przyjaźń podzialona przez kobietę i 30 metrów ziemi.", null);
+        MovieEntity citizenJones = new MovieEntity(searchedName, "Anglik próboje wyjaśnic co się dzieje na ukrainie w latach 30-tych.");
+        MovieEntity citizen = new MovieEntity("Obywatel", "Żywot poczciwego obywatale kraju nad wisłą.");
+        MovieEntity ironBridge = new MovieEntity("Żelazny most", "Przyjaźń podzialona przez kobietę i 30 metrów ziemi.");
 
         List<MovieEntity> movieEntities = new ArrayList<>();
-        movieEntities.add(obywatelJones);
-        movieEntities.add(obywatel);
+        movieEntities.add(citizenJones);
+        movieEntities.add(citizen);
         movieEntities.add(ironBridge);
 
         movieEntityMongoCollection.insertMany(movieEntities);
 
         List<MovieEntity> expectedList = new ArrayList<>();
-        expectedList.add(obywatelJones);
+        expectedList.add(citizenJones);
         assertEquals(expectedList, movieRepository.findMovieByName(searchedName));
     }
 
     @Test
     void shouldReturnListOfMovieEntitiesContainsQueryInName() {
         final String searchedQuery = "obywatel";
-        MovieEntity obywatelJones = new MovieEntity("Obywatel Jones", "Anglik próboje wyjaśnic co się dzieje na ukrainie w latach 30-tych.", null);
-        MovieEntity obywatel = new MovieEntity("Obywatel", "Żywot poczciwego obywatale kraju nad wisłą.", null);
-        MovieEntity ironBridge = new MovieEntity("Żelazny most", "Przyjaźń podzialona przez kobietę i 30 metrów ziemi.", null);
+        MovieEntity citizenJones = new MovieEntity("Obywatel Jones", "Anglik próboje wyjaśnic co się dzieje na ukrainie w latach 30-tych.");
+        MovieEntity citizen = new MovieEntity("Obywatel", "Żywot poczciwego obywatale kraju nad wisłą.");
+        MovieEntity ironBridge = new MovieEntity("Żelazny most", "Przyjaźń podzialona przez kobietę i 30 metrów ziemi.");
 
         List<MovieEntity> movieEntities = new ArrayList<>();
-        movieEntities.add(obywatelJones);
-        movieEntities.add(obywatel);
+        movieEntities.add(citizenJones);
+        movieEntities.add(citizen);
         movieEntities.add(ironBridge);
 
         movieEntityMongoCollection.insertMany(movieEntities);
 
         List<MovieEntity> expectedList = new ArrayList<>();
-        expectedList.add(obywatelJones);
-        expectedList.add(obywatel);
+        expectedList.add(citizenJones);
+        expectedList.add(citizen);
 
         assertEquals(expectedList, movieRepository.searchMovieByName(searchedQuery));
     }
 
     @Test
-    void deleteMovie() {
-        MovieEntity movieEntity = new MovieEntity("Joker", "Strudozny życiem komik popada w obłęd i staje się psychopatycznmy mordercą", null);
+    void shouldDeleteMovie() {
+        MovieEntity movieEntity = new MovieEntity("Joker", "Strudozny życiem komik popada w obłęd i staje się psychopatycznmy mordercą");
         String movieId = "5ddc2fff26a6e33c4f6d6c20";
         movieEntity.setId(new ObjectId(movieId));
         movieEntityMongoCollection.insertOne(movieEntity);
@@ -170,15 +170,20 @@ class MovieRepositoryTest {
             "'Obywatel Jones', 'Anglik próboje wyjaśnic co się dzieje na ukrainie w latach 30-tych.'",
             "'Obywatel'      , 'Żywot poczciwego obywatale kraju nad wisłą.'"
     })
-    void save(String name, String description) {
-        MovieEntity movieEntity = new MovieEntity(name, description, null);
-        MovieEntity savedEntity = movieRepository.save(movieEntity);
+    void shouldSaveMovieEntity(String name, String description) {
+        MovieEntity movieEntity = new MovieEntity(name, description);
+        Optional<MovieEntity> savedEntity = movieRepository.save(movieEntity);
 
-        assertEquals(movieEntity, savedEntity);
-        assertEquals(savedEntity, movieRepository.findMovieByName(name).get(0));
+        assertEquals(movieEntity, savedEntity.get());
+        assertEquals(savedEntity.get(), movieRepository.findMovieByName(name).get(0));
     }
+
 
     @Test
     void updateMovieImagePath() {
+        String movieId = "5ddc2fff26a6e33c4f6d6c20";
+        MovieEntity movieEntity = new MovieEntity("Joker", "Strudozny życiem komik popada w obłęd i staje się psychopatycznmy mordercą");
+
+
     }
 }

@@ -2,7 +2,8 @@ package co.brick.kszerlag.jmovie.repository;
 
 import co.brick.kszerlag.jmovie.entity.MovieEntity;
 import co.brick.kszerlag.jmovie.fault.MovieAlreadyExistsException;
-import co.brick.kszerlag.jmovie.utils.ErrorsMsgConst;
+import co.brick.kszerlag.jmovie.fault.UnexpectedResultException;
+import co.brick.kszerlag.jmovie.consts.ErrorMsgConst;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -33,17 +34,21 @@ public class MovieRepositoryImpl implements MovieRepository {
     }
 
     @Override
-    public MovieEntity save(MovieEntity movieEntity) {
+    public Optional<MovieEntity> save(MovieEntity movieEntity) {
         if (isNew(movieEntity)) {
-            return movieDao.insert(movieEntity);
-        } else {
-            return movieDao.update(movieEntity);
+            return Optional.ofNullable(movieDao.insert(movieEntity));
         }
+        if (movieDao.update(movieEntity).wasAcknowledged()) {
+            return Optional.empty();
+        }
+        throw new UnexpectedResultException(ErrorMsgConst.MOVIE_UPDATE_FAILED);
     }
 
     @Override
     public void deleteMovie(String movieId) {
-        movieDao.delete(movieId);
+        if (!movieDao.delete(movieId).wasAcknowledged()) {
+            throw new UnexpectedResultException(ErrorMsgConst.MOVIE_DELETE_FAILED);
+        }
     }
 
     private boolean isNew(MovieEntity movieEntity) {
@@ -53,7 +58,7 @@ public class MovieRepositoryImpl implements MovieRepository {
         if (movieEntity.getName() != null) {
             for (MovieEntity movie : findMovieByName(movieEntity.getName())) {
                 if (movie.equals(movieEntity)) {
-                    throw new MovieAlreadyExistsException(ErrorsMsgConst.MOVIE_ALREADY_EXISTS);
+                    throw new MovieAlreadyExistsException(ErrorMsgConst.MOVIE_ALREADY_EXISTS);
                 }
             }
         }
@@ -61,8 +66,8 @@ public class MovieRepositoryImpl implements MovieRepository {
     }
 
     @Override
-    public MovieEntity updateMovieImagePath(String movieId, String imagePath) {
-        return movieDao.updateMovieImagePath(movieId, imagePath);
+    public Optional<MovieEntity> updateMovieImagePath(String movieId, String imagePath) {
+        return Optional.ofNullable(movieDao.findAndUpdateMovieImagePath(movieId, imagePath));
     }
 
     @Override

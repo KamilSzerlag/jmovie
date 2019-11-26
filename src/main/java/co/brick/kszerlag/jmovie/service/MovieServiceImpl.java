@@ -1,11 +1,13 @@
 package co.brick.kszerlag.jmovie.service;
 
 import co.brick.kszerlag.jmovie.entity.MovieEntity;
+import co.brick.kszerlag.jmovie.fault.NoSuchMovieException;
 import co.brick.kszerlag.jmovie.repository.MovieRepository;
+import co.brick.kszerlag.jmovie.consts.ErrorMsgConst;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.Optional;
 
 @Service
 public class MovieServiceImpl implements MovieService {
@@ -17,13 +19,15 @@ public class MovieServiceImpl implements MovieService {
     }
 
     @Override
-    public MovieEntity createMovie(MovieEntity movieEntity) {
+    public Optional<MovieEntity> createMovie(MovieEntity movieEntity) {
         return movieRepository.save(movieEntity);
     }
 
     @Override
     public MovieEntity findMovieById(String movieId) {
-        return movieRepository.findMovieById(movieId).orElseThrow(NoSuchElementException::new);
+        return movieRepository.findMovieById(movieId)
+                .orElseThrow(() -> new NoSuchMovieException(ErrorMsgConst.UPDATE_MOVIE_WITH_THIS_ID_NOT_EXISTS)
+                );
     }
 
     @Override
@@ -32,7 +36,7 @@ public class MovieServiceImpl implements MovieService {
     }
 
     @Override
-    public MovieEntity updateMovie(String id, MovieEntity movieEntity) {
+    public Optional<MovieEntity> updateMovie(String id, MovieEntity movieEntity) {
         return movieRepository.save(movieEntity);
     }
 
@@ -48,7 +52,10 @@ public class MovieServiceImpl implements MovieService {
 
     @Override
     public MovieEntity updateImagePath(String movieId, String path) {
-        return movieRepository.updateMovieImagePath(movieId, path);
+        return movieRepository.updateMovieImagePath(movieId, path)
+                .orElseThrow(
+                        () -> new NoSuchMovieException(ErrorMsgConst.IMAGE_UPDATE_MOVIE_WITH_THIS_ID_NOT_EXISTS)
+                );
     }
 
     @Override
