@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static com.mongodb.client.model.Filters.eq;
 import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
 import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -34,7 +35,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class MovieRepositoryTest {
 
     private static MongodExecutable mongodExecutable;
+
     private MovieRepository movieRepository;
+
     private MongoCollection<MovieEntity> movieEntityMongoCollection;
 
     @BeforeAll
@@ -180,10 +183,27 @@ class MovieRepositoryTest {
 
 
     @Test
-    void updateMovieImagePath() {
+    void shouldUpdateMovieImagePath() {
         String movieId = "5ddc2fff26a6e33c4f6d6c20";
         MovieEntity movieEntity = new MovieEntity("Joker", "Strudozny życiem komik popada w obłęd i staje się psychopatycznmy mordercą");
-
-
     }
+
+    @Test
+    void shouldUpdateMovieEntity() {
+        String movieId = "5ddc2fff26a6e33c4f6d6c20";
+        MovieEntity christmasPrince = new MovieEntity("Świąteczny książę", "Zwykła dziewczyna poznaje w święta księcia.");
+        christmasPrince.setId(new ObjectId(movieId));
+
+        movieEntityMongoCollection.insertOne(christmasPrince);
+
+        MovieEntity newValuesEntity = new MovieEntity("Joker", "Strudozny życiem komik popada w obłęd i staje się psychopatycznmy mordercą");
+        newValuesEntity.setId(new ObjectId(movieId));
+
+        boolean isUpdated = movieRepository.update(movieId, newValuesEntity);
+        assertTrue(isUpdated);
+
+        MovieEntity actualEntity = movieEntityMongoCollection.find(eq("_id", new ObjectId(movieId))).first();
+        assertEquals(newValuesEntity, actualEntity);
+    }
+
 }

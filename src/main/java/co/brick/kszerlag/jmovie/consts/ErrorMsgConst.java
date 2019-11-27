@@ -12,6 +12,7 @@ public class ErrorMsgConst {
     public static final String UPDATE_MOVIE_WITH_THIS_ID_NOT_EXISTS = "There is no movie under id:";
     public static final String IMAGE_UPDATE_MOVIE_WITH_THIS_ID_NOT_EXISTS = "Image can't be uploaded, there is no movie under id:";
 
+    public static final String MOVIE_SAVE_FAILED = "Save movie operation failed";
     public static final String MOVIE_UPDATE_FAILED = "Update movie operation failed";
     public static final String MOVIE_DELETE_FAILED = "Delete movie operation failed";
 

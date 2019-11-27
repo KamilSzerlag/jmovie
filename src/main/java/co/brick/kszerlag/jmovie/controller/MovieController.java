@@ -5,7 +5,6 @@ import co.brick.kszerlag.jmovie.dto.ResponseError;
 import co.brick.kszerlag.jmovie.entity.MovieEntity;
 import co.brick.kszerlag.jmovie.fault.MovieAlreadyExistsException;
 import co.brick.kszerlag.jmovie.fault.NoSuchMovieException;
-import co.brick.kszerlag.jmovie.fault.UnexpectedResultException;
 import co.brick.kszerlag.jmovie.service.MovieService;
 import co.brick.kszerlag.jmovie.consts.ErrorCodeConst;
 import co.brick.kszerlag.jmovie.consts.ErrorMsgConst;
@@ -19,6 +18,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -26,7 +26,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Valid;
-import javax.validation.constraints.Max;
+import javax.validation.constraints.Size;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -44,7 +44,7 @@ public class MovieController {
 
     protected static final Logger logger = LoggerFactory.getLogger(MovieController.class);
 
-    @Value("${app.upload.folder}")
+    @Value("${application.upload.folder}")
     private String storagePath;
 
     private MovieService movieService;
@@ -68,9 +68,11 @@ public class MovieController {
     }
 
     @GetMapping
-    public ResponseEntity<List<MovieDto>> findAll() {
-        List<MovieEntity> movieEntityList = movieService.findAll();
-        return ResponseEntity.ok(MovieMapper.getINSTANCE().toMovieDtoList(movieEntityList));
+    public ResponseEntity<Map<String, List<MovieDto>>> findAll() {
+        List<MovieEntity> movieEntities = movieService.findAll();
+        Map<String, List<MovieDto>> movies = new HashMap<>();
+        movies.put("movies", MovieMapper.getINSTANCE().toMovieDtoList(movieEntities));
+        return ResponseEntity.ok(movies);
     }
 
     @GetMapping("/{movieId}")
@@ -80,31 +82,34 @@ public class MovieController {
     }
 
     @GetMapping(params = "name")
-    public ResponseEntity<List<MovieDto>> findMovieByName(@RequestParam String name) {
+    public ResponseEntity<Map<String,List<MovieDto>>> findMovieByName(@RequestParam String name) {
         List<MovieEntity> movieEntities = movieService.findMovieByName(name);
-        return ResponseEntity.ok(MovieMapper.getINSTANCE().toMovieDtoList(movieEntities));
+        Map<String, List<MovieDto>> moviesFound = new HashMap<>();
+        moviesFound.put("movies", MovieMapper.getINSTANCE().toMovieDtoList(movieEntities));
+        return ResponseEntity.ok(moviesFound);
     }
 
     @GetMapping(params = "filteredName")
-    public ResponseEntity<Map<String,List<MovieDto>>> searchMovieByName(@RequestParam(defaultValue = "")
-                                                                            @Max(value = 30, message = "Query is to long.")
-                                                                                    String query) throws ConstraintViolationException {
+    public ResponseEntity<Map<String,List<MovieDto>>> searchMovieByName(@RequestParam(defaultValue = "", name = "filteredName")
+                                                                            @Size(max = 30, message = "Query is to long.")
+                                                                                    String filteredName) throws ConstraintViolationException {
         Map<String, List<MovieDto>> filteredMovies = new HashMap<>();
-        if (query.isBlank()) {
+        if (filteredName.isBlank()) {
             filteredMovies.put("movies", MovieMapper.getINSTANCE().toMovieDtoList(movieService.findAll()));
             return ResponseEntity.ok(filteredMovies);
         }
-        List<MovieEntity> movieEntities = movieService.searchMovieByName(query);
-        filteredMovies.put("movies",MovieMapper.getINSTANCE().toMovieDtoList(movieEntities));
+        List<MovieEntity> movieEntities = movieService.searchMovieByName(filteredName);
+        filteredMovies.put("movies", MovieMapper.getINSTANCE().toMovieDtoList(movieEntities));
         return ResponseEntity.ok(filteredMovies);
     }
 
     @PutMapping("/{movieId}")
-    public ResponseEntity updateMovie(@PathVariable @MongoId String movieId, @Valid MovieDto newMovieDto) {
-        return movieService.updateMovie(movieId, MovieMapper.getINSTANCE().toMovieEntity(newMovieDto))
-                .map(movieEntity -> ResponseEntity.noContent().build())
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity updateMovie(@PathVariable @MongoId String movieId, @RequestBody @Valid MovieDto newMovieDto) throws ConstraintViolationException {
+        return movieService.updateMovie(movieId, MovieMapper.getINSTANCE().toMovieEntity(newMovieDto)) ?
+                ResponseEntity.noContent().build() :
+                ResponseEntity.notFound().build();
     }
+
 
     @DeleteMapping("/{movieId}")
     public ResponseEntity removeMovie(@PathVariable @MongoId String movieId) {
@@ -154,14 +159,8 @@ public class MovieController {
         return new ResponseEntity<>(new ResponseError(ErrorCodeConst.RESOURCE_ALREADY_EXISTS, e.getMessage()), HttpStatus.CONFLICT);
     }
 
-    @ExceptionHandler(UnexpectedResultException.class)
-    ResponseEntity<ResponseError> handleUnexpectedResultException(UnexpectedResultException e) {
-        logger.error(e.getMessage(), e);
-        return new ResponseEntity<>(new ResponseError(ErrorCodeConst.UNEXPECTED_OPERATION_RESULT, e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-
-    @ExceptionHandler(ConstraintViolationException.class)
-    ResponseEntity<ResponseError> handleConstraintViolationException(ConstraintViolationException e) {
+    @ExceptionHandler({ConstraintViolationException.class, MethodArgumentNotValidException.class})
+    ResponseEntity<ResponseError> handleConstraintViolationException(Exception e) {
         return new ResponseEntity<>(new ResponseError(ErrorCodeConst.CONSTRAINT_VIOLATION, e.getMessage()), HttpStatus.BAD_REQUEST);
     }
 }

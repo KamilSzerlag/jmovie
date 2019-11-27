@@ -15,6 +15,8 @@ public interface MovieRepository {
 
     Optional<MovieEntity> save(MovieEntity movieEntity);
 
+    boolean update(String movieId, MovieEntity movieEntity);
+
     void deleteMovie(String movieId);
 
     Optional<MovieEntity> updateMovieImagePath(String movieId, String imagePath);

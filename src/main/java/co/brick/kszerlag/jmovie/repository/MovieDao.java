@@ -50,9 +50,9 @@ public class MovieDao {
         return collection.find().into(new ArrayList<>());
     }
 
-    UpdateResult update(MovieEntity movieEntity) {
+    UpdateResult update(String movieId, MovieEntity movieEntity) {
         MongoCollection<MovieEntity> collection = mongoDatabase.getCollection("movies", MovieEntity.class);
-        return collection.updateOne(eq("_id", movieEntity.getId()), combine(set("name", movieEntity.getName()), set("img", movieEntity.getImage())));
+        return collection.updateOne(eq("_id", new ObjectId(movieId)), combine(set("name", movieEntity.getName()), set("description", movieEntity.getDescription()) , set("img", movieEntity.getImage())));
     }
 
     DeleteResult delete(String movieId) {

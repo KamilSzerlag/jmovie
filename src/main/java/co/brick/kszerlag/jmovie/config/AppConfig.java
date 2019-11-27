@@ -18,7 +18,7 @@ import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
 @Configuration
 public class AppConfig {
 
-    @Value("${app.mongodb_host}")
+    @Value("${application.mongodb.host}")
     private String host;
 
     @Bean

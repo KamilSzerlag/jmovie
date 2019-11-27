@@ -15,14 +15,19 @@ public class MovieDto {
     @Size(max = 150)
     private String name;
 
-    @NotBlank
-    @Size(min = 30, message = "Minimum description size is 50 chars.")
+    @NotBlank(message = "Description must contains at least 30 chars")
+    @Size(min = 30, message = "Minimum description size is 30 chars.")
     @Size(max = 300, message = "Maximum description size is 300 chars.")
     private String description;
 
     private String image;
 
     public MovieDto() {
+    }
+
+    public MovieDto(String name, String description) {
+        this.name = name;
+        this.description = description;
     }
 
     public MovieDto(String id, String name, String description, String image) {

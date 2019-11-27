@@ -2,7 +2,6 @@ package co.brick.kszerlag.jmovie.repository;
 
 import co.brick.kszerlag.jmovie.entity.MovieEntity;
 import co.brick.kszerlag.jmovie.fault.MovieAlreadyExistsException;
-import co.brick.kszerlag.jmovie.fault.UnexpectedResultException;
 import co.brick.kszerlag.jmovie.consts.ErrorMsgConst;
 import org.springframework.stereotype.Repository;
 
@@ -38,17 +37,17 @@ public class MovieRepositoryImpl implements MovieRepository {
         if (isNew(movieEntity)) {
             return Optional.ofNullable(movieDao.insert(movieEntity));
         }
-        if (movieDao.update(movieEntity).wasAcknowledged()) {
-            return Optional.empty();
-        }
-        throw new UnexpectedResultException(ErrorMsgConst.MOVIE_UPDATE_FAILED);
+        return Optional.empty();
+    }
+
+    @Override
+    public boolean update(String movieId, MovieEntity movieEntity) {
+        return movieDao.update(movieId, movieEntity).wasAcknowledged();
     }
 
     @Override
     public void deleteMovie(String movieId) {
-        if (!movieDao.delete(movieId).wasAcknowledged()) {
-            throw new UnexpectedResultException(ErrorMsgConst.MOVIE_DELETE_FAILED);
-        }
+        movieDao.delete(movieId).wasAcknowledged();
     }
 
     private boolean isNew(MovieEntity movieEntity) {

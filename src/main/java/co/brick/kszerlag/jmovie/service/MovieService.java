@@ -13,7 +13,7 @@ public interface MovieService {
 
     List<MovieEntity> findMovieByName(String name);
 
-    Optional<MovieEntity> updateMovie(String movieId, MovieEntity movieEntity);
+    boolean updateMovie(String movieId, MovieEntity movieEntity);
 
     MovieEntity updateImagePath(String movieId, String path);
 
