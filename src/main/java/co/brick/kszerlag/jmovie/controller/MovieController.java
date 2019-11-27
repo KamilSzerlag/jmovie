@@ -17,10 +17,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Valid;
 import javax.validation.constraints.Max;
@@ -43,6 +46,7 @@ public class MovieController {
 
     @Value("${app.upload.folder}")
     private String storagePath;
+
     private MovieService movieService;
 
     public MovieController(MovieService movieService) {
@@ -109,15 +113,28 @@ public class MovieController {
     }
 
     @PostMapping(value = "/{movieId}/image", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<MovieDto> uploadMovieImage(@PathVariable @MongoId String movieId, @RequestParam(name = "image") MultipartFile multipartFile) {
+    public ResponseEntity uploadMovieImage(@PathVariable @MongoId String movieId, @RequestParam(name = "image") MultipartFile multipartFile, HttpServletRequest request) {
         try {
             String fileName = movieId;
-            MovieEntity movieEntity = movieService.updateImagePath(movieId, String.format("%s/%s", storagePath, fileName));
+            MovieEntity movieEntity = movieService.updateImagePath(movieId, UriComponentsBuilder.fromHttpRequest(new ServletServerHttpRequest(request)).build().toUriString());
             Files.copy(multipartFile.getInputStream(), Paths.get(storagePath + "/" + fileName), StandardCopyOption.REPLACE_EXISTING);
             return ResponseEntity.ok(MovieMapper.getINSTANCE().toMovieDto(movieEntity));
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
-            return ResponseEntity.unprocessableEntity().build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ResponseError(ErrorCodeConst.INTERNAL_ERROR, ErrorMsgConst.UNEXPECTED_ERROR));
+        }
+    }
+
+    @GetMapping(value = "/{movieId}/image", produces = {MediaType.IMAGE_PNG_VALUE})
+    private ResponseEntity<byte[]> downloadMovieImage(@PathVariable @MongoId String movieId) {
+        String fileName = movieId;
+        String filePath = storagePath + "/" + fileName;
+        try {
+            return new ResponseEntity<>(Files.readAllBytes(Paths.get(filePath)), HttpStatus.ACCEPTED);
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
