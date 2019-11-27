@@ -26,11 +26,6 @@ public class AppConfig {
         return new SimpleMongoClientDbFactory(MongoClients.create(host), "cobrick");
     }
 
-//    @Bean
-//    public MongoTransactionManager transactionManager(MongoDbFactory mongoDbFactory) {
-//        return new MongoTransactionManager(mongoDbFactory);
-//    }
-
     @Bean
     public MongoDatabase mongoDb() {
         return mongoDbFactory().getDb().withCodecRegistry(codecRegistry());
