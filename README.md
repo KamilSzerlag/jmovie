@@ -1,8 +1,4 @@
-# cobrick-recruitment-task-java
-
-Recruitmen task for Junior Java Developer position.
-
-##Zadanie rekrutacyjne co.brick
+# JMovie
 Aplikacja stworzona w oparciu o framework <b>Spring boot</b>. Jako bazę danych użyto <b>MongoDB</b>.
 
 Aplikacja może zostać uruchomiona poprzez użycie komendy w katalogu zawięrającym aplikację.
