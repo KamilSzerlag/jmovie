@@ -1,6 +1,8 @@
 # JMovie
 Aplikacja stworzona w oparciu o framework <b>Spring boot</b>. Jako bazę danych użyto <b>MongoDB</b>.
 
+Przedstawia architekturę warstwową
+
 Aplikacja może zostać uruchomiona poprzez użycie komendy w katalogu zawięrającym aplikację.
 <code>mvn spring-boot:run</code>
 
